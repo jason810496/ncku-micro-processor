@@ -1,5 +1,4 @@
-st p=18f4520
-#include<p18f4520.inc>
+nclude<p18f4520.inc>
     CONFIG OSC = INTIO67
     CONFIG WDT = OFF
     org 0x00
@@ -21,52 +20,57 @@ st p=18f4520
 	MOVLW	0x7C ; a1
 	MOVWF 0x01, 1
 	
-	MOVLW	0xFE ; a2
+	MOVLW	0x78 ; a2
 	MOVWF 0x02, 1
 	
-	MOVLW	0x34 ; a3
+	MOVLW	0xFE ; a3
 	MOVWF 0x03, 1
 	
-	MOVLW	0x7A ; a4
+	MOVLW	0x34 ; a4
 	MOVWF 0x04, 1
 	
-	MOVLW	0x0D ; a5
+	MOVLW	0x7A ; a5
 	MOVWF 0x05, 1
 	
-	MOVLW	0x7C ; a6
+	MOVLW	0x0D ; a6
 	MOVWF 0x06, 1
+	
+	
 
     init_outer_loop:
 	MOVLW d'7'
-	MOVWF 0x12 ; n
-	DECF 0x12, 1 ; n-- (　only need to loop n-1 time )
+	MOVWF 0x12, 1 ; n
 	
 	; outer ptr
 	LFSR 0, 0x100
     outer_loop:
 	init_inner_loop:
+	    MOVFF 0x110, 0x111 ;j=i
+	    INCF 0x11, 1, 1 ;j++
 	    MOVFF 0x110, WREG ; WREG = i
-	    INCF WREG ; WREG = i+1
+	    INCF WREG, 0, 1 ; WREG = i+1 ( dest:WREG, bank )
 	    ; inner ptr
 	    LFSR 2, 0x100
-	    MOVFF PLUSW2, WREG ; outer ptr -> a(i+1), WREG = a(i+1)
+	    MOVFF PLUSW2, WREG ; inner ptr -> a(i+1), WREG = a(i+1)
 	inner_loop:
-	    CPFSGT INDF0, WREG ; cmp pi with pj, skip if pi > pj
+	    CPFSGT INDF0, 1 ; cmp pi with pj, skip if pi > pj
 		GOTO inner_loop_continue
 	swap_element:
 	    MOVFF INDF0, WREG ; pi to WREG
 	    MOVFF INDF2, INDF0; pj to pi
 	    MOVFF WREG, INDF2 ; WREG to pj
 	inner_loop_continue:
-	    INCF 0x11, 1 ;j++ ( ,1 for bank)
+	    INCF 0x11, 1, 1 ;j++ ( first 1: store back to file rregister, second 1: bank )
+	    MOVFF POSTINC2, WREG ; pj++
 	    MOVFF 0x112, WREG ; WREG  = n
-	    CPFSEQ 0x11, WREG, 1 ; cmp f with WREG, skip if f = w ( ,1 for bank )
+	    CPFSEQ 0x11, 1 ; cmp f with WREG, skip if f = w ( ,1 for bank )
 		GOTO inner_loop
     outer_loop_continue:
-	INCF 0x10, 1 ; i++ ( ,1 for bank )
+	INCF 0x10,1 , 1 ; i++ ( ,1 for bank )
 	MOVFF POSTINC0, WREG ; pi++
 	MOVFF 0x112, WREG ; WREG  = n
-	CPFSEQ 0x10, WREG, 1 ; cmp f with WREG, skip if f = w ( ,1 for bank )
+	DECF WREG,0 ,1 ; WREG = n-1 ( dest: WREG, bank )
+	CPFSEQ 0x10, 1 ; cmp f with WREG, skip if f = w ( ,1 for bank )
 	    GOTO outer_loop
     finish:
 	NOP
