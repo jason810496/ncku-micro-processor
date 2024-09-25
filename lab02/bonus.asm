@@ -1,5 +1,54 @@
-st p=18f4520
-#include<p18f4520.inc>
+nclude<p18f4520.inc>
+    CONFIG OSC = INTIO67
+    CONFIG WDT = OFF
+    org 0x00
+    ; lab02 advance
+    
+    clear:
+	; test case
+	CLRF 0x100
+	CLRF 0x106
+	CLRF 0x110 ; i
+	CLRF 0x111 ; j
+	CLRF 0x112 ; n
+    init_test:
+	MOVLB 0x01 ; move bank
+	
+	MOVLW 0x08 ; a0
+        MOVWF 0x00, 1
+	
+	MOVLW	0x7C ; a1
+	MOVWF 0x01, 1
+	
+	MOVLW	0x78 ; a2
+	MOVWF 0x02, 1
+	
+	MOVLW	0xFE ; a3
+	MOVWF 0x03, 1
+	
+	MOVLW	0x34 ; a4
+	MOVWF 0x04, 1
+	
+	MOVLW	0x7A ; a5
+	MOVWF 0x05, 1
+	
+	MOVLW	0x0D ; a6
+	MOVWF 0x06, 1
+	
+	
+
+    init_outer_loop:
+	MOVLW d'7'
+	MOVWF 0x12, 1 ; n
+	
+	; outer ptr
+	LFSR 0, 0x100
+    outer_loop:
+	init_inner_loop:
+	    MOVFF 0x110, 0x111 ;j=i
+	    INCF 0x11, 1, 1 ;j++
+	    MOVFF 0x110, WREG ; WREG = i
+nclude<p18f4520.inc>
     CONFIG OSC = INTIO67
     CONFIG WDT = OFF
     org 0x00
@@ -46,16 +95,34 @@ st p=18f4520
 	MOVFF WREG, FSR0 ; ptr0 -> a[mid]
 	MOVFF WREG, 0x23 ; mid
 	MOVFF 0x0F, WREG ; WREG = to be search
-	check_eq:
-	    CPFSEQ INDF0
-		GOTO eq_case
-	check_neq:
+	    check_eq:
+		CPFSEQ INDF0
+		    GOTO eq_case
+	    check_neq:
+		CPFSGT INDF0 ; if a[mid] > to be search, skip
+		    GOTO smaller_case
+		    GOTO bigger_case
 	eq_case:
+	    MOVLW 0xFE
+	    MOVWF 0x11
+	    GOTO finish
 	bigger_case:
+	    MOVFF 0x23, 0x22
+	    DECF 0x22
+	    GOTO b_search_continue
 	smaller_case:
+	    MOVFF 0x23, 0x21
+	    DECF 0x21
+	    GOTO b_search_continue
     b_search_continue:
         CPFSGT 0x23 ; if mid > WREG, skip 
 	    GOTO b_seach
+    not_fonud:
+	MOVLW 0x00
+	MOVWF 0x11
+    finish:
+	NOP
+	end
 	
 
 
