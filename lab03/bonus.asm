@@ -10,23 +10,35 @@ List p=18f4520
 	CLRF 0x02
 
     test_case:
-    ; case 1
+    ; example; expected; 0x06
 	MOVLW 0x00
 	MOVWF 0x00
 	
 	MOVLW 0x40
 	MOVWF 0x01
-    ; case 2
+    ; case 1; expected; 0x07
 	MOVLW 0x00
 	MOVWF 0x00
 	
 	MOVLW 0x41
 	MOVWF 0x01
-    ; case 3
+    ; case 2; expected; 0x0E
 	MOVLW 0x2A
 	MOVWF 0x00
 	
 	MOVLW 0x41
+	MOVWF 0x01
+    ; case 3; expected; 0x01
+	MOVLW 0x00
+	MOVWF 0x00
+	
+	MOVLW 0x02
+	MOVWF 0x01
+    ; case 4; expected; 0x10
+	MOVLW 0xFF
+	MOVWF 0x00
+	
+	MOVLW 0xF1
 	MOVWF 0x01
 	
     init_loop:
