@@ -7,9 +7,20 @@ List p=18f4520
     clear:
 	CLRF TRISA
 
-    init:
+    test_case:
+	; example ; expected; 0xBE -> 0xDF
 	MOVLW 0x5F
 	MOVWF TRISA
+	; case 1 ; expected; 0x92 -> 0xC9
+	MOVLW 0x49
+	MOVWF TRISA
+	; case 2 ; expected; 0x26 -> 0x13
+	MOVLW 0x93
+	MOVWF TRISA
+	; case 3 ; expected; 0x90 -> 0xC8
+	MOVLW 0xC8
+	MOVWF TRISA
+	
 	
     left_shift:
 	RLCF TRISA
