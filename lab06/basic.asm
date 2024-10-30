@@ -11,7 +11,7 @@ List p=18f4520
     org 0x00            ; Set program start address to 0x00
 
 ; instruction frequency = 1 MHz / 4 = 0.25 MHz
-; instruction time = 1/0.25 = 4 μs
+; instruction time = 1/0.25 = 4 ?s
 ; Total_cycles = 2 + (2 + 8 * num1 + 3) * num2 cycles
 ; num1 = 111, num2 = 70, Total_cycles = 62512 cycles
 ; Total_delay ~= Total_cycles * instruction time = 0.25 s
@@ -52,6 +52,8 @@ int:
     BSF TRISB, 0        ; Set RB0 as input (TRISB = 0000 0001)
     CLRF LATA           ; Clear LATA
     BCF TRISA, 0        ; Set RA0 as output (TRISA = 0000 0000)
+    BCF TRISA, 1        ; Set RA1 as output (TRISA = 0000 0000)
+    BCF TRISA, 2        ; Set RA2 as output (TRISA = 0000 0000)
     
 ; Button check
 check_process:          
@@ -86,7 +88,7 @@ toggle_first:
     
     
 lightup:
-    DELAY d'111', d'70' ; Call delay macro to delay for about 0.25 seconds
+    DELAY 0x06F, 0x046 ; Call delay macro to delay for about 0.25 seconds
     BRA check_process   
     
 end
