@@ -10,7 +10,6 @@ List p=18f4520
     L2 EQU 0x15         ; Define L2 memory location
     org 0x00            ; Set program start address to 0x00
     
-    #define cur_state 0x010
     #define local_n 0x05
 
 ; instruction frequency = 1 MHz / 4 = 0.25 MHz
@@ -58,7 +57,7 @@ int:
     BCF TRISA, 1
     BCF TRISA, 2 
     
-    CLRF cur_state
+    CLRF 0x08
     
 ; Button check
 state_0:
@@ -154,23 +153,24 @@ check_button:
     
 
 button_click:
-    TSTFSZ cur_state
-    BRA check_state_1_2 ; cur_state = 1 or 2
-    BRA to_state_1 ; cur_state = 0
+    TSTFSZ 0x08
+    BRA check_state_1_2 ; 0x08 = 1 or 2
+    BRA to_state_1 ; 0x08 = 0
 
     
 check_state_1_2:
     MOVLW 0x01
-    CPFSEQ cur_state ; skip if eq
-    BRA to_state_0 ; cur_state = 2
-    BRA to_state_2 ; cur_state = 1
+    CPFSEQ 0x08 ; skip if eq
+    BRA to_state_0 ; 0x08 = 2
+    BRA to_state_2 ; 0x08 = 1
     
 to_state_0:
     BCF LATA, 0
     BCF LATA, 1
     BCF LATA, 2
     
-    CLRF cur_state
+    MOVLW 0x00
+    MOVFF WREG, 0x08
     BRA state_0
     
 to_state_1:
@@ -179,7 +179,7 @@ to_state_1:
     BCF LATA, 2
     
     MOVLW 0x01
-    MOVFF WREG, cur_state
+    MOVFF WREG, 0x08
     BRA state_1
     
 to_state_2:
@@ -188,7 +188,7 @@ to_state_2:
     BCF LATA, 2
     
     MOVLW 0x02
-    MOVFF WREG, cur_state
+    MOVFF WREG, 0x08
     BRA state_2
     
 end
