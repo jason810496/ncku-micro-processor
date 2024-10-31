@@ -58,6 +58,8 @@ int:
     BCF TRISA, 1
     BCF TRISA, 2 
     
+    CLRF cur_state
+    
 ; Button check
 state_0:
     RCALL check_button
@@ -108,7 +110,6 @@ state_2:
     DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
-    BCF LATA, 0
     
     BSF LATA, 1
     RCALL check_button
@@ -120,6 +121,7 @@ state_2:
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
     BCF LATA, 1
+    BCF LATA, 0
     
 state_2_loop:
     BSF LATA, 2
@@ -133,7 +135,8 @@ state_2_loop:
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
     
-    DECFSZ state_2_loop
+    DECFSZ local_n
+    BRA state_2_loop
     
     ; last light
     BSF LATA, 2
@@ -169,11 +172,13 @@ to_state_0:
     BRA state_0
     
 to_state_1:
-    INCF cur_state
+    MOVLW 0x01
+    MOVFF WREG, cur_state
     BRA state_1
     
 to_state_2:
-    INCF cur_state
+    MOVLW 0x02
+    MOVFF WREG, cur_state
     BRA state_2
     
 end
