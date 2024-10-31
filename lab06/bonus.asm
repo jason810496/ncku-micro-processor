@@ -14,7 +14,7 @@ List p=18f4520
     #define local_n 0x15
 
 ; instruction frequency = 1 MHz / 4 = 0.25 MHz
-; instruction time = 1/0.25 = 4 μs
+; instruction time = 1/0.25 = 4 ?s
 ; Total_cycles = 2 + (2 + 8 * num1 + 3) * num2 cycles
 ; num1 = 111, num2 = 70, Total_cycles = 62512 cycles
 ; Total_delay ~= Total_cycles * instruction time = 0.25 s
@@ -54,7 +54,9 @@ int:
     CLRF PORTB          ; Clear PORTB
     BSF TRISB, 0        ; Set RB0 as input (TRISB = 0000 0001)
     CLRF LATA           ; Clear LATA
-    BCF TRISA, 0        ; Set RA0 as output (TRISA = 0000 0000)
+    BCF TRISA, 0 
+    BCF TRISA, 1
+    BCF TRISA, 2 
     
 ; Button check
 state_0:
@@ -66,20 +68,26 @@ state_0:
 state_1:
     CLRF LATA
     
-    BTG LATA, 0
-    DELAY d'111', d'140' ; 0.5 sec
+    BSF LATA, 0
     RCALL check_button
-    BTG LATA, 0
+    DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
+    BCF LATA, 0
     
-    BTG LATA, 1
-    DELAY d'111', d'140' ; 0.5 sec
+    BSF LATA, 1
     RCALL check_button
-    BTG LATA, 1
+    DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
+    BCF LATA, 1
     
-    BTG LATA, 2
-    DELAY d'111', d'140' ; 0.5 sec
+    BSF LATA, 2
     RCALL check_button
-    BTG LATA, 2
+    DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
+    BCF LATA, 2
     
     
     BRA state_1
@@ -91,34 +99,49 @@ state_2:
     MOVLW 0x02
     MOVWF local_n
     
-    BTG LATA, 0
-    DELAY d'111', d'140' ; 0.5 sec
+    BSF LATA, 0
     RCALL check_button
-    DELAY d'111', d'140' ; 0.5 sec
+    DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
-    BTG LATA, 0
+    DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
+    BCF LATA, 0
     
-    BTG LATA, 1
-    DELAY d'111', d'140' ; 0.5 sec
+    BSF LATA, 1
     RCALL check_button
-    DELAY d'111', d'140' ; 0.5 sec
+    DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
-    BTG LATA, 1
+    DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
+    BCF LATA, 1
     
 state_2_loop:
-    BTG LATA, 2
-    DELAY d'111', d'140' ; 0.5 sec
+    BSF LATA, 2
     RCALL check_button
-    BTG LATA, 2
-    DELAY d'111', d'140' ; 0.5 sec
+    DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
+    BCF LATA, 2
+    RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
+    
     DECFSZ state_2_loop
     
     ; last light
-    BTG LATA, 2
-    DELAY d'111', d'140' ; 0.5 sec
+    BSF LATA, 2
     RCALL check_button
-    BTG LATA, 2
+    DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
+    BCF LATA, 2
     ; inf loop for state 2
     BRA state_2
     
@@ -131,15 +154,15 @@ check_button:
 
 button_click:
     TSTFSZ cur_state
-    BRA check_state_1_2
-    BRA to_state_1
+    BRA check_state_1_2 ; cur_state = 1 or 2
+    BRA to_state_1 ; cur_state = 0
 
     
 check_state_1_2:
     MOVLW 0x01
     CPFSEQ cur_state
-    BRA to_state_2
-    BRA to_state_1
+    BRA to_state_0 ; cur_state = 2
+    BRA to_state_2 ; cur_state = 1
     
 to_state_0:
     CLRF cur_state
@@ -154,7 +177,6 @@ to_state_2:
     BRA state_2
     
 end
-
 
 
 
