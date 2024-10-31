@@ -69,24 +69,24 @@ state_0:
     
 state_1:    
     BSF LATA, 0
-    RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
     BCF LATA, 0
     
     BSF LATA, 1
-    RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
     BCF LATA, 1
     
     BSF LATA, 2
-    RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
     BCF LATA, 2
     
     
@@ -99,7 +99,6 @@ state_2:
     MOVWF local_n
     
     BSF LATA, 0
-    RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
@@ -107,9 +106,9 @@ state_2:
     DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
     
     BSF LATA, 1
-    RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
@@ -117,30 +116,31 @@ state_2:
     DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
     BCF LATA, 1
     BCF LATA, 0
     
 state_2_loop:
     BSF LATA, 2
+    
+    DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
-    BCF LATA, 2
     RCALL check_button
-    DELAY d'111', d'70' ; 0.25 sec
-    RCALL check_button
-    DELAY d'111', d'70' ; 0.25 sec
     
     DECFSZ local_n
     BRA state_2_loop
     
     ; last light
     BSF LATA, 2
-    RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
     BCF LATA, 2
     ; inf loop for state 2
     BRA state_2
@@ -160,7 +160,7 @@ button_click:
     
 check_state_1_2:
     MOVLW 0x01
-    CPFSEQ cur_state
+    CPFSEQ cur_state ; skip if eq
     BRA to_state_0 ; cur_state = 2
     BRA to_state_2 ; cur_state = 1
     
