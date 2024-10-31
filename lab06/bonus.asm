@@ -122,11 +122,12 @@ state_2:
     
 state_2_loop:
     BSF LATA, 2
+    DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
+    DELAY d'111', d'70' ; 0.25 sec
+    RCALL check_button
     
-    DELAY d'111', d'70' ; 0.25 sec
-    RCALL check_button
-    DELAY d'111', d'70' ; 0.25 sec
-    RCALL check_button
+    BCF LATA, 2
     DELAY d'111', d'70' ; 0.25 sec
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
