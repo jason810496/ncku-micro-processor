@@ -67,9 +67,7 @@ state_0:
     BRA state_0
     
     
-state_1:
-    CLRF LATA
-    
+state_1:    
     BSF LATA, 0
     RCALL check_button
     DELAY d'111', d'70' ; 0.25 sec
@@ -96,7 +94,6 @@ state_1:
     
     
 state_2:
-    CLRF LATA
     CLRF local_n
     MOVLW 0x02
     MOVWF local_n
@@ -168,15 +165,27 @@ check_state_1_2:
     BRA to_state_2 ; cur_state = 1
     
 to_state_0:
+    BCF LATA, 0
+    BCF LATA, 1
+    BCF LATA, 2
+    
     CLRF cur_state
     BRA state_0
     
 to_state_1:
+    BCF LATA, 0
+    BCF LATA, 1
+    BCF LATA, 2
+    
     MOVLW 0x01
     MOVFF WREG, cur_state
     BRA state_1
     
 to_state_2:
+    BCF LATA, 0
+    BCF LATA, 1
+    BCF LATA, 2
+    
     MOVLW 0x02
     MOVFF WREG, cur_state
     BRA state_2
