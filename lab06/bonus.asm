@@ -11,7 +11,7 @@ List p=18f4520
     org 0x00            ; Set program start address to 0x00
     
     #define cur_state 0x010
-    #define local_n 0x15
+    #define local_n 0x05
 
 ; instruction frequency = 1 MHz / 4 = 0.25 MHz
 ; instruction time = 1/0.25 = 4 ?s
