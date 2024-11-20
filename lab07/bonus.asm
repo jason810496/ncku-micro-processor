@@ -94,6 +94,8 @@ goto Initial			; 避免程式一開始就會執行到ISR這一段，要跳過。
 ISR:				; Interrupt發生時，會跳到這裡執行。
     org 0x08	
     ; setup ISR		
+    BTFSS INTCON, INT0IF
+    GOTO toggle_lights ; btn not press -> switch state
       ; toggle timer2
       toggle_timer:
           check_025_sec:
@@ -161,7 +163,7 @@ ISR:				; Interrupt發生時，會跳到這裡執行。
               GOTO toggle_lights
       toggle_lights:
         ; is backward
-          BTFSS IS_BACKWARD
+          BTFSS IS_BACKWARD, 0
           GOTO light_forward
           GOTO light_backward
         light_forward:
