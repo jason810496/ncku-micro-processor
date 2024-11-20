@@ -189,6 +189,7 @@ ISR:				; Interrupt發生時，會跳到這裡執行。
       isr_tear_down:
     ; teardown ISR 
     BCF INTCON, INT0IF
+    BCF PIR1, TMR2IF
     RETFIE                    ; 離開ISR，回到原本程式執行的位址，同時會將GIE設為1，允許之後的interrupt能夠觸發
     
     
