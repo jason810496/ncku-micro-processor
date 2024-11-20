@@ -91,9 +91,13 @@ ISR:				; Interrupt發生時，會跳到這裡執行。
     org 0x08	
     ; setup ISR		
         ; change state
+	BTFSS MAXNUM, 0
+	INCF MAXNUM
+	
         RLNCF MAXNUM
-        INCF MAXNUM ; MAXNUM = MAXNUM * 2 + 1
-        BCF MAXNUM, 5
+        INCF MAXNUM
+	 ; MAXNUM = MAXNUM * 2 + 1
+        BTFSC MAXNUM, 4
         GOTO set_maxnum_3 ; MAXNUM = 3 if MAXNUM == 31
         GOTO lsr_continue
 
@@ -120,15 +124,18 @@ Initial:				; 初始化的相關設定
     BCF INTCON, INT0IF		; 先將Interrupt flag bit清空
     BSF INTCON, GIE		; 將Global interrupt enable bit打開
     BSF INTCON, INT0IE		; 將interrupt0 enable bit 打開 (INT0與RB0 pin腳位置相同)
-    
 main:
     DELAY  d'350' , d'180'
     MOVFF MAXNUM, WREG
-    CPFSEQ MAXNUM 
+    CPFSLT LATA 
+    GOTO end_state
     GOTO increase_lata
-    GOTO main_continue
     increase_lata:
         INCF LATA
+	GOTO main_continue
+    end_state:
+	MOVLW 0x20 ; set LATA to b10000
+	MOVFF WREG, LATA
     main_continue:
         bra main
 end
