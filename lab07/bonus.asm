@@ -55,174 +55,218 @@
 ; CONFIG7H
   CONFIG  EBTRB = OFF           ; Boot Block Table Read Protection bit (Boot block (000000-0007FFh) not protected from table reads executed in other blocks)
 
-    L1 EQU 0x14
-    L2 EQU 0x15
+ org 0x00
+ L1 EQU 0x14         ; Define L1 memory location
+    L2 EQU 0x15         ; Define L2 memory location
+    org 0x00            ; Set program start address to 0x00
 
-    MAXNUM EQU 0x20
-    CUR_STATE EQU 0x21
-    ; CUR_STATE: 0, 1, 2
-    IS_BACKWARD EQU 0x22
-    ; IS_BACKWARD: 0, 1
-
-    org 0x00
-    
-DELAY macro num1, num2 
-    local LOOP1 
-    local LOOP2
-    MOVLW num2
-    MOVWF L2
+; instruction frequency = 1 MHz / 4 = 0.25 MHz
+; instruction time = 1/0.25 = 4 ?s
+; Total_cycles = 2 + (2 + 8 * num1 + 3) * num2 cycles
+; num1 = 111, num2 = 70, Total_cycles = 62512 cycles
+; Total_delay ~= Total_cycles * instruction time = 0.25 s
+DELAY macro num1, num2
+    local LOOP1         ; Inner loop
+    local LOOP2         ; Outer loop
+   
+    ; 2 cycles
+    MOVLW num2          ; Load num2 into WREG
+    MOVWF L2            ; Store WREG value into L2
+   
+    ; Total_cycles for LOOP2 = 2 cycles
     LOOP2:
-	MOVLW num1
-	MOVWF L1
+    MOVLW num1          
+    MOVWF L1  
+   
+    ; Total_cycles for LOOP1 = 8 cycles
     LOOP1:
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	DECFSZ L1, 1
-	BRA LOOP1
-	DECFSZ L2, 1
-	BRA LOOP2
+    NOP                 ; busy waiting
+    NOP
+    NOP
+    NOP
+    NOP
+    DECFSZ L1, 1        
+    BRA LOOP1           ; BRA instruction spends 2 cycles
+   
+    ; 3 cycles
+    DECFSZ L2, 1        ; Decrement L2, skip if zero
+    BRA LOOP2          
 endm
-	
-; 程式邏輯：會一直卡在main裡面做無限迴圈，按下RB0的按鈕後會觸發interrupt，跳到ISR執行
-; ISR裡的內容會亮起所有在RA上的燈泡，Delay約0.5秒後熄滅。
+ goto Initial    
+ISR:
+    org 0x08      
+    MOVLW 0xFF
+    MOVWF 0x10
+    BTFSC 0x01,1
+    GOTO ST1
+    BTFSC 0x01,2
+    GOTO ST2
+    BTFSC 0x01,3
+    GOTO ST3
+    BTFSC 0x01,4
+    GOTO ST4
+    BTFSC 0x01,5
+    GOTO ST5
+    BTFSC 0x01,6
+    GOTO ST6
+   
+    ST1:
+BCF 0x01,1
+BSF 0x01,2
+BCF INTCON, INT0IF
+    RETFIE
+    ST2:
+BCF 0x01,2
+BSF 0x01,3
+BCF INTCON, INT0IF
+    RETFIE
+    ST3:
+BCF 0x01,3
+BSF 0x01,4
+BCF INTCON, INT0IF
+    RETFIE
 
-goto Initial			; 避免程式一開始就會執行到ISR這一段，要跳過。
-ISR:				; Interrupt發生時，會跳到這裡執行。
-    org 0x08	
-    ; setup ISR		
-    BTFSS INTCON, INT0IF
-    GOTO toggle_lights ; btn not press -> switch state
-      ; toggle timer2
-      toggle_timer:
-          check_025_sec:
-            MOVLW D'61'
-            CPFSEQ PR2
-            GOTO check_05_sec
-            MOVLW D'122'
-            GOTO toggle_state
-          check_05_sec:
-            MOVLW D'122'
-            CPFSEQ PR2
-            GOTO check_1_sec
-            MOVLW D'244'
-            GOTO toggle_state
-          check_1_sec:
-            MOVLW D'244'
-            CPFSEQ PR2
-            GOTO toggle_state
-            MOVLW D'21'
-            GOTO toggle_state
-      toggle_state:
-          check_state_1:
-              MOVLW 0x01
-              CPFSEQ CUR_STATE
-              GOTO check_state_2
-                ; to state 2
-                MOVLW 0x02
-                MOVWF CUR_STATE
-                ; upd max num and is backward
-                MOVLW 0x07
-                MOVWF MAXNUM
-                CLRF IS_BACKWARD
-                ; reset LATA
-                CLRF LATA
-              GOTO toggle_lights
-          check_state_2:
-              MOVLW 0x02
-              CPFSEQ CUR_STATE
-              GOTO check_state_3
-                ; to state 3
-                MOVLW 0x03
-                MOVWF CUR_STATE
-                ; upd max num and is backward
-                MOVLW 0x0F
-                MOVWF MAXNUM
-                CLRF IS_BACKWARD
-                ; reset LATA
-                CLRF LATA
-              GOTO toggle_lights
-          check_state_3:
-              MOVLW 0x03
-              CPFSEQ CUR_STATE
-              GOTO check_state_1
-                ; to state 1
-                MOVLW 0x01
-                MOVWF CUR_STATE
-                ; upd max num and is backward
-                MOVLW 0x0F
-                MOVWF MAXNUM
-                MOVLW 0x01
-                MOVWF IS_BACKWARD
-                ; reset LATA
-                MOVLW 0x0F
-                MOVWF LATA
-              GOTO toggle_lights
-      toggle_lights:
-        ; is backward
-          BTFSS IS_BACKWARD, 0
-          GOTO light_forward
-          GOTO light_backward
-        light_forward:
-          INCF LATA
-            BTFSC MAXNUM, 3
-            GOTO mod_by_16
-            GOTO mod_by_8
-            mod_by_8:
-              BTFSC LATA, 3
-              CLRF LATA
-            mod_by_16:
-              BTFSC LATA, 4
-              CLRF LATA
-          GOTO isr_tear_down
-        light_backward:
-          DECF LATA
-            ; check if LATA is 0
-            MOVLW 0x00
-            CPFSEQ LATA
-            GOTO isr_tear_down
-            MOVLW 0x0F
-          GOTO isr_tear_down
-      isr_tear_down:
-    ; teardown ISR 
+    ST4:
+BCF 0x01,4
+BSF 0x01,5
+BCF INTCON, INT0IF
+    RETFIE
+    ST5:
+BCF 0x01,5
+BSF 0x01,6
+BCF INTCON, INT0IF
+    RETFIE
+    ST6:
+BCF 0x01,6
+BSF 0x01,1
+   
     BCF INTCON, INT0IF
-    BCF PIR1, TMR2IF
-    RETFIE                    ; 離開ISR，回到原本程式執行的位址，同時會將GIE設為1，允許之後的interrupt能夠觸發
-    
-    
-Initial:				; 初始化的相關設定
+    RETFIE
+Initial:
     MOVLW 0x0F
-    MOVWF ADCON1		; 設定成要用數位的方式，Digitial I/O 
-    
+    MOVWF ADCON1
+    initial_state:
+MOVLW 0x02
+MOVWF 0x01
+
+MOVLW 0x00
+MOVWF 0x10 ;FLAG
+   
     CLRF TRISA
     CLRF LATA
     BSF TRISB,  0
     BCF RCON, IPEN
-    BCF INTCON, INT0IF		; 先將Interrupt flag bit清空
-    BSF INTCON, GIE		; 將Global interrupt enable bit打開
-    BSF INTCON, INT0IE		; 將interrupt0 enable bit 打開 (INT0與RB0 pin腳位置相同)
-    ; init timer2
-    BCF PIR1, TMR2IF		; 為了使用TIMER2，所以要設定好相關的TMR2IF、TMR2IE、TMR2IP。
-    BSF IPR1, TMR2IP
-    BSF PIE1 , TMR2IE
-    MOVLW b'11111111'	        ; 將Prescale與Postscale都設為1:16，意思是之後每256個週期才會將TIMER2+1
-    MOVWF T2CON		; 而由於TIMER本身會是以系統時脈/4所得到的時脈為主
-    MOVLW D'61'		; 因此每256 * 4 = 1024個cycles才會將TIMER2 + 1
-    MOVWF PR2			; 若目前時脈為250khz，想要Delay 0.5秒的話，代表每經過125000cycles需要觸發一次Interrupt
-				; 因此PR2應設為 125000 / 1024 = 122.0703125， 約等於122。
-    MOVLW D'00100000'
-    MOVWF OSCCON	        ; 記得將系統時脈調整成250kHz
-    ; init MAXNUM
-    MOVLW 0x07
-    MOVWF MAXNUM
-    ; init CUR_STATE
-    CLRF CUR_STATE
-    ; init IS_BACKWARD
-    CLRF IS_BACKWARD
-    
+    BCF INTCON, INT0IF ; ??Interrupt flag bit??
+    BSF INTCON, GIE ; ?Global interrupt enable bit??
+    BSF INTCON, INT0IE ; ?interrupt0 enable bit ?? (INT0?RB0 pin?????)
+   
+   
 main:
-    bra main
-end
+    MOVLW 0x00
+    MOVWF 0x10 ;FLAG
+    BTFSC 0x01,1
+    GOTO STATE1
+    BTFSC 0x01,2
+    GOTO STATE2
+    BTFSC 0x01,3
+    GOTO STATE3
+    BTFSC 0x01,4
+    GOTO STATE4
+    BTFSC 0x01,5
+    GOTO STATE5
+    BTFSC 0x01,6
+    GOTO STATE6
+   
+    STATE1:;7/0.25
+    CLRF LATA
+    loop1:
+    INCF LATA
+    DELAY d'111', d'70'
+    RCALL CHECK
+    MOVLW 0x07
+    CPFSEQ LATA
+    GOTO loop1
+    RCALL CHECK
+    CLRF LATA
+    GOTO STATE1
+   
+   
+   
+    STATE2:
+    CLRF LATA
+    loop2:
+    INCF LATA
+    DELAY d'111', d'140'
+    RCALL CHECK
+   
+    MOVLW 0x0F
+    CPFSEQ LATA
+    GOTO loop2
+    RCALL CHECK
+    GOTO STATE2
+   
+   
+    STATE3: ;_15/0.25
+    MOVLW 0x0F
+    MOVWF LATA
+    loop3:
+   
+    DECF LATA
+    DELAY d'111', d'70'
+    RCALL CHECK
+    MOVLW 0x00
+    CPFSEQ LATA
+    GOTO loop3
+    RCALL CHECK
+    GOTO STATE3
+   
+   
+    STATE4:;7/0.25
+    CLRF LATA
+    loop4:
+    INCF LATA
+    DELAY d'111', d'140'
+    RCALL CHECK
+    MOVLW 0x07
+    CPFSEQ LATA
+    GOTO loop4
+    RCALL CHECK
+    CLRF LATA
+    GOTO STATE4
+   
+    STATE5:
+    CLRF LATA
+    loop5:
+    INCF LATA
+    DELAY d'111', d'70'
+    RCALL CHECK
+   
+    MOVLW 0x0F
+    CPFSEQ LATA
+    GOTO loop5
+    RCALL CHECK
+    GOTO STATE5
+   
+    STATE6: ;_15/0.5
+    MOVLW 0x0F
+    MOVWF LATA
+    loop6:
+   
+    DECF LATA
+    DELAY d'111', d'140'
+    RCALL CHECK
+    MOVLW 0x00
+    CPFSEQ LATA
+    GOTO loop6
+    RCALL CHECK
+    GOTO STATE6
+   
+    CHECK:
+MOVLW 0xFF
+CPFSEQ 0x10
+RETURN
+CLRF LATA
+    GOTO main
+
+   
+ end
