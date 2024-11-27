@@ -10,7 +10,7 @@
 #pragma config LVP = OFF        // Low Voltage (single -supply) In-Circute Serial Pragramming Enable bit
 #pragma config CPD = OFF        // Data EEPROM?Memory Code Protection bit (Data EEPROM code protection off)
 
-int TURN_CLOCKWISE = 0;
+int TURN_CLOCKWISE = 1;
 
 /*
 Pulse Width: 500 ~ 2400 µs (-90° ~ 90°, 1450 µs → 0°)
@@ -72,6 +72,7 @@ void __interrupt(high_priority) H_ISR(){
             while(get_current_angle() != 90){
                 turn_with_delay_clockwise();
             }
+            TURN_CLOCKWISE = 0;
         }
     }
     else{
@@ -86,6 +87,7 @@ void __interrupt(high_priority) H_ISR(){
             while(get_current_angle() != -90){
                 turn_with_delay_counter_clockwise();
             }
+            TURN_CLOCKWISE = 1;
         }
     }
     // Clear interrupt flag
