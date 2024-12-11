@@ -16,7 +16,7 @@
 int numbers[2][8] = {
     {0, 2, 4, 6, 8, 10, 12, 14}, // even
     {1, 3, 5, 7, 9, 11, 13, 15} // odd
-}
+};
 int is_odd = 1;
 int prev_value = 0;
 
@@ -25,15 +25,18 @@ void __interrupt(high_priority)H_ISR(){
     int value = (ADRESH << 8) + ADRESL; // max: 1023
     //do things
 
-    if( vaule > prev_value){
+    if( value - prev_value > 20){
         is_odd = 1; // increase -> odd
+        prev_value = value;
     }
-    else if( value < prev_value){
+    else if( prev_value - value > 20 ){
         is_odd = 0; // decrease -> even
+        prev_value = value;
     }
 
     int index = value / 128; // (2^10 / 8) = 128 range : 0~7
     LATC = numbers[is_odd][index];
+    
     
     //clear flag bit
     PIR1bits.ADIF = 0;
