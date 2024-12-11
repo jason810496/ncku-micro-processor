@@ -23,11 +23,12 @@ void __interrupt(high_priority)H_ISR(){
     //do things
 
     if(value < 512){
-        set_LED_lightness(value << 2);
+        value = value * 2;
     }
     else{
-        set_LED_lightness((1023 - value) << 2);
+        value = (1023 - value) * 2;
     }
+    set_LED_lightness(value);
     
     //clear flag bit
     PIR1bits.ADIF = 0;
@@ -59,6 +60,11 @@ void init_ADC(){
     ADCON0bits.ADON = 1;      // Enable ADC
     ADCON2bits.ADFM = 1;      // right justified 
     // ( move init ADC interrupt to init_interrupt() )
+    // step2
+    PIE1bits.ADIE = 1;    // Enable ADC interrupt
+    PIR1bits.ADIF = 0;    // Clear ADC interrupt flag
+    INTCONbits.PEIE = 1;  // Enable peripheral interrupts
+    INTCONbits.GIE = 1;   // Enable global interrupts
     // step3
     ADCON0bits.GO = 1;    // Start ADC conversion
 }
@@ -88,22 +94,6 @@ void init_PWM(){
      * = 0.019968s ~= 20ms
      */
     PR2 = 0x9b;
-    
-    /**
-     * Duty cycle
-     * = (CCPR1L:CCP1CON<5:4>) * Tosc * (TMR2 prescaler)
-     * = (0x0b*4 + 0b01) * 8µs * 4
-     * = 0.00144s ~= 1450µs
-     */
-    CCPR1L = 0x04;
-    CCP1CONbits.DC1B = 0b00;
-}
-
-void init_interrupt(){
-    PIE1bits.ADIE = 1;    // Enable ADC interrupt
-    PIR1bits.ADIF = 0;    // Clear ADC interrupt flag
-    INTCONbits.PEIE = 1;  // Enable peripheral interrupts
-    INTCONbits.GIE = 1;   // Enable global interrupts
 }
 
 void main(void) 
@@ -111,7 +101,6 @@ void main(void)
     
     init_ADC();
     init_PWM();
-    init_interrupt();
 
     while(1);
     
