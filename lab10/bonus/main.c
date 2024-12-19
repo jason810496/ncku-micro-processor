@@ -42,6 +42,8 @@ void main(void)
     }
     return;
 }
+
+
 //#pragma interrupt ISR
 //void ISR(void)
 //{
@@ -75,3 +77,14 @@ void main(void)
 //    
 //    return;
 //}
+
+
+// void __interrupt(high_priority) Hi_ISR(void)
+// {
+//     if(INTCONbits.INT0IF){
+//         LATD = 0;
+//     }
+//     INTCONbits.INT0IF=0;
+//     return;
+// }
+
