@@ -4,6 +4,8 @@
 
 char mystring[20];
 int lenStr = 0;
+int counter = 0;
+int stop = 0;
 
 void UART_Initialize() {
            
@@ -37,7 +39,7 @@ void UART_Initialize() {
 
     // impotant !!!!!!!!!
     // WTF is this shit
-    IPR1bits.RCIP = 0;   //Receive Interrupt is low Priority    
+    IPR1bits.RCIP = 0;   //Receive Interrupt is high Priority    
     
     
     // init ADC
@@ -83,29 +85,8 @@ void MyusartRead()
     
     if( temp >= '0' && temp <= '9' ){
         // we don't need to -'0' for this shit
-        int stop = temp - '0';
-        int prev = 0;
-        LATD = 0;
-        while( LATD < stop ){
-            if( prev > LATD ){
-                // button have click and set LATD = 0
-                break;
-            }
-            
-            // should #define _XTAL_FREQ 1000000   // Fosc = 1 MHz
-            // before using __delay_ms
-            __delay_ms(500); // 0.5 sec
-            LATD++;
-            if( prev > LATD ){
-                // button have click and set LATD = 0
-                break;
-            }
-            prev  = LATD;
-        }
-        LATD = 0;
-    }
-     UART_Write (temp);
-   
+        stop = temp - '0';
+    }   
     
     
     return ;
@@ -119,6 +100,15 @@ char *GetString(){
 // void interrupt low_priority Lo_ISR(void)
 void __interrupt(low_priority)  Lo_ISR(void)
 {
+    // handle button interrupt
+    if(INTCONbits.INT0IF){
+        LATD = 0;
+        stop = 0;
+        INTCONbits.INT0IF = 0;
+        return;
+    }
+    
+    // handle uart interrupt
     if(RCIF)
     {
         if(RCSTAbits.OERR)
@@ -129,8 +119,12 @@ void __interrupt(low_priority)  Lo_ISR(void)
         }
         
         MyusartRead();
+        
+        
         RCIF = 0;   //Clear flag bit
+        return;
     }
+    
     
    // process other interrupt sources here, if required
     return;
