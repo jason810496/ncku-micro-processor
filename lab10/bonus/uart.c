@@ -76,8 +76,10 @@ void MyusartRead()
     
     // allow newline on terminal
     if(temp == '\r' ){
+        UART_Write ('\r');
         temp = '\n';
     }
+    UART_Write (temp);
     
     if( temp >= '0' && temp <= '9' ){
         // we don't need to -'0' for this shit

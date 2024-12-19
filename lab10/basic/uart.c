@@ -64,6 +64,7 @@ void MyusartRead()
 
     // allow newline on terminal
     if(temp == '\r' ){
+        UART_Write ('\r');
         temp = '\n';
     }
     UART_Write (temp);
